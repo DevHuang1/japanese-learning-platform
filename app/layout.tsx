@@ -1,7 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Noto_Serif_JP, Sawarabi_Mincho, Padauk } from "next/font/google";
+import {
+  Inter,
+  Noto_Serif_JP,
+  Sawarabi_Mincho,
+  Padauk,
+} from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/AppShell";
+import { GlossProvider } from "@/components/GlossProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -48,7 +54,9 @@ export default function RootLayout({
       className={`${inter.variable} ${notoSerifJp.variable} ${sawarabiMincho.variable} ${padauk.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <AppShell>{children}</AppShell>
+        <GlossProvider>
+          <AppShell>{children}</AppShell>
+        </GlossProvider>
       </body>
     </html>
   );

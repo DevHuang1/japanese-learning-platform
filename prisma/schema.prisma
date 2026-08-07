@@ -18,10 +18,12 @@ model Vocabulary {
   exampleSentenceJp String?           @map("example_sentence_jp")
   exampleSentenceMm String?           @map("example_sentence_mm")
   pdfSource         String?           @map("pdf_source")
+  lesson            Int?              @map("lesson")
   createdAt         DateTime          @default(now()) @map("created_at")
   progress          UserWordProgress?
 
   @@index([jlptLevel])
+  @@index([lesson])
   @@map("vocabulary")
 }
 

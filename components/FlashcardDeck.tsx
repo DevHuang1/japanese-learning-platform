@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Volume2, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { RATINGS, type Rating } from "@/lib/sm2";
+import { GlossText } from "@/components/GlossText";
 
 export interface FlashcardData {
   vocabId: string;
@@ -90,7 +91,7 @@ export function FlashcardDeck({ initialCards }: { initialCards: FlashcardData[] 
     return (
       <div className="paper-card rounded-2xl p-12 text-center">
         <CheckCircle2 className="mx-auto text-crimson mb-4" size={40} />
-        <h2 className="font-jp text-xl text-indigo-dark mb-2">今日の学習は終わりです</h2>
+        <h2 className="font-jp text-xl text-indigo-dark mb-2"><GlossText>今日の学習は終わりです</GlossText></h2>
         <p className="text-paper-ink/70">All due cards reviewed. Great work!</p>
       </div>
     );
@@ -130,10 +131,10 @@ export function FlashcardDeck({ initialCards }: { initialCards: FlashcardData[] 
                 Tap to reveal
               </div>
               <div className="font-jp text-5xl text-indigo-dark leading-tight text-center px-6">
-                {card.kanji ?? card.kana}
+                <GlossText>{card.kanji ?? card.kana}</GlossText>
               </div>
               {card.kanji && (
-                <div className="text-jp text-xl text-paper-ink/70">{card.kana}</div>
+                <div className="text-jp text-xl text-paper-ink/70"><GlossText>{card.kana}</GlossText></div>
               )}
               <button
                 onClick={(e) => {
@@ -159,7 +160,7 @@ export function FlashcardDeck({ initialCards }: { initialCards: FlashcardData[] 
               </div>
               {card.exampleSentenceJp && (
                 <div className="mt-3 px-6 text-jp text-indigo-mid text-center leading-relaxed">
-                  {card.exampleSentenceJp}
+                  <GlossText>{card.exampleSentenceJp}</GlossText>
                 </div>
               )}
               {card.exampleSentenceMm && (

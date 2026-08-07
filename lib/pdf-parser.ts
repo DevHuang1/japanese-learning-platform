@@ -63,6 +63,7 @@ export async function upsertWords(
           partOfSpeech: w.part_of_speech || null,
           exampleSentenceJp: w.example_sentence_jp || null,
           exampleSentenceMm: w.example_sentence_mm || null,
+          lesson: w.lesson ?? null,
           pdfSource,
         },
       });

@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, BrainCircuit, RefreshCw, CheckCircle2, XCircle } from "lucide-react";
+import { GlossText } from "@/components/GlossText";
 
 export interface QuizQuestion {
   id: string;
@@ -142,7 +143,7 @@ export function QuizRunner() {
       <div className="paper-card rounded-2xl p-12 text-center">
         <BrainCircuit className="mx-auto text-crimson mb-4" size={40} />
         <h2 className="font-jp text-2xl text-indigo-dark mb-2">
-          {pct >= 80 ? "素晴らしい！" : pct >= 50 ? "よくできました！" : "もう一度！"}
+          {pct >= 80 ? <GlossText>素晴らしい！</GlossText> : pct >= 50 ? <GlossText>よくできました！</GlossText> : <GlossText>もう一度！</GlossText>}
         </h2>
         <p className="text-4xl font-bold text-indigo-dark mb-2">
           {score} / {questions.length}
@@ -210,7 +211,7 @@ export function QuizRunner() {
           />
         </div>
         <p className="font-jp text-2xl leading-relaxed text-indigo-dark min-h-[4rem]">
-          {q.prompt}
+          <GlossText>{q.prompt}</GlossText>
         </p>
       </div>
 
@@ -239,7 +240,7 @@ export function QuizRunner() {
                   <span className="w-6 h-6 rounded-full bg-indigo-dark/5 flex items-center justify-center text-xs">
                     {String.fromCharCode(65 + i)}
                   </span>
-                  <span className="text-jp text-lg">{opt}</span>
+                  <span className="text-jp text-lg"><GlossText>{opt}</GlossText></span>
                   {selected !== null && isCorrect && (
                     <CheckCircle2 size={18} className="text-emerald-600" />
                   )}

@@ -10,6 +10,7 @@ import {
   FileSearch,
   Languages,
 } from "lucide-react";
+import { GlossText } from "@/components/GlossText";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -30,10 +31,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <aside className="md:w-60 md:min-h-[calc(100vh-4px)] bg-indigo-dark text-paper/90 flex md:flex-col border-b md:border-b-0 md:border-r border-white/10">
           <div className="hidden md:flex items-center gap-3 px-6 py-6 border-b border-white/10">
             <div className="w-9 h-9 rounded-full bg-crimson flex items-center justify-center text-paper text-lg font-bold shadow-lg shadow-crimson/30">
-              和
+              <GlossText>和</GlossText>
             </div>
             <div>
-              <div className="font-jp text-lg leading-none tracking-wide">和学</div>
+              <div className="font-jp text-lg leading-none tracking-wide"><GlossText>和学</GlossText></div>
               <div className="text-[11px] text-paper/50 mt-1">Wagaku · JLPT Study</div>
             </div>
           </div>

@@ -11,6 +11,7 @@ import {
   Target,
   Trophy,
 } from "lucide-react";
+import { GlossText } from "@/components/GlossText";
 import { ProgressRing } from "./ProgressRing";
 
 export interface DashboardStats {
@@ -65,10 +66,10 @@ export function DashboardClient({ stats }: { stats: DashboardStats }) {
           和
         </div>
         <p className="text-sm tracking-widest text-crimson font-semibold uppercase">
-          Wagaku · 日本語学習
+          Wagaku · <GlossText>日本語学習</GlossText>
         </p>
         <h1 className="font-jp text-4xl text-indigo-dark mt-2">
-          {new Date().getHours() < 12 ? "おはようございます" : new Date().getHours() < 18 ? "こんにちは" : "こんばんは"}
+          {new Date().getHours() < 12 ? <GlossText>おはようございます</GlossText> : new Date().getHours() < 18 ? <GlossText>こんにちは</GlossText> : <GlossText>こんばんは</GlossText>}
         </h1>
         <p className="mt-2 text-paper-ink/70 text-sm">
           {hydrated

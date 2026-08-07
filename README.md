@@ -20,13 +20,10 @@ Drop any Japanese or Burmese `.pdf` into **`~/Desktop/JLPT-PDFs`**
 (the app scans this folder). Then set an AI provider in `.env`:
 
 ```env
-# OpenAI-compatible (OpenAI, OpenRouter, DeepSeek, Ollama, LM Studio…)
-OPENAI_API_KEY="sk-..."
-OPENAI_BASE_URL="https://api.openai.com/v1"
-OPENAI_MODEL="gpt-4o-mini"
-
-# or Anthropic Claude
-ANTHROPIC_API_KEY="sk-ant-..."
+# Any OpenAI-compatible API works (Groq, OpenAI, OpenRouter, DeepSeek, Ollama, LM Studio…)
+OPENAI_API_KEY="<your key>"
+OPENAI_BASE_URL="https://api.groq.com/openai/v1"
+OPENAI_MODEL="llama-3.3-70b-versatile"
 ```
 
 Run ingestion from the UI (**PDF Ingest** page) or the CLI:

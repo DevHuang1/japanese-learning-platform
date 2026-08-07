@@ -7,6 +7,7 @@ export interface ExtractedWord {
   burmese_meaning: string;
   jlpt_level: "N5" | "N4";
   part_of_speech?: string;
+  lesson?: number | null;
   example_sentence_jp?: string;
   example_sentence_mm?: string;
 }
@@ -38,50 +39,79 @@ async function chatJSON(
   const provider = detectProvider();
   if (provider === "none") throw new Error("NO_AI_PROVIDER");
 
-  if (provider === "openai") {
-    const base = process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1";
-    const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
-    const res = await fetch(`${base.replace(/\/$/, "")}/chat/completions`, {
+  const maxAttempts = 6;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    if (provider === "openai") {
+      const base = process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1";
+      const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+      const res = await fetch(`${base.replace(/\/$/, "")}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model,
+          temperature: 0.3,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: `${system}\n\nReturn ONLY valid JSON matching this shape:\n${schemaHint}` },
+            { role: "user", content: user },
+          ],
+        }),
+      });
+      if (res.status === 429 && attempt < maxAttempts) {
+        await sleep(rateLimitDelayMs(res, attempt));
+        continue;
+      }
+      if (!res.ok) throw new Error(`AI HTTP ${res.status}: ${await res.text()}`);
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content ?? "";
+      return JSON.parse(stripFence(text));
+    }
+
+    const model = process.env.ANTHROPIC_MODEL ?? "claude-3-5-haiku-latest";
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
+        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
         model,
-        temperature: 0.3,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: `${system}\n\nReturn ONLY valid JSON matching this shape:\n${schemaHint}` },
-          { role: "user", content: user },
-        ],
+        max_tokens: 4096,
+        system: `${system}\n\nReturn ONLY valid JSON matching this shape:\n${schemaHint}`,
+        messages: [{ role: "user", content: user }],
       }),
     });
+    if (res.status === 429 && attempt < maxAttempts) {
+      await sleep(rateLimitDelayMs(res, attempt));
+      continue;
+    }
     if (!res.ok) throw new Error(`AI HTTP ${res.status}: ${await res.text()}`);
     const data = await res.json();
-    const text: string = data?.choices?.[0]?.message?.content ?? "";
+    const text: string = data?.content?.[0]?.text ?? "";
     return JSON.parse(stripFence(text));
   }
 
-  const model = process.env.ANTHROPIC_MODEL ?? "claude-3-5-haiku-latest";
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 4096,
-      system: `${system}\n\nReturn ONLY valid JSON matching this shape:\n${schemaHint}`,
-      messages: [{ role: "user", content: user }],
-    }),
-  });
-  if (!res.ok) throw new Error(`AI HTTP ${res.status}: ${await res.text()}`);
-  const data = await res.json();
-  const text: string = data?.content?.[0]?.text ?? "";
-  return JSON.parse(stripFence(text));
+  throw new Error("AI provider rate-limited after retries");
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function rateLimitDelayMs(res: Response, attempt: number): number {
+  const retryAfter = res.headers.get("retry-after");
+  if (retryAfter) {
+    const seconds = Number(retryAfter);
+    if (Number.isFinite(seconds) && seconds > 0) {
+      return Math.min(seconds * 1000 + 300, 30_000);
+    }
+  }
+  const base = Math.min(2_000 * 2 ** (attempt - 1), 30_000);
+  return base + Math.round(Math.random() * 500);
 }
 
 function stripFence(text: string): string {
@@ -100,6 +130,7 @@ const EXTRACT_SCHEMA = `{
       "burmese_meaning": "string (required, Unicode Burmese, U+1000-U+109F)",
       "jlpt_level": "N5 or N4",
       "part_of_speech": "string (optional)",
+      "lesson": "number (optional, Minna no Nihongo lesson 1-25. Detect from the chapter header such as 第1課 / 第2課 / Lesson N in the text. Use null if unknown)",
       "example_sentence_jp": "string (optional)",
       "example_sentence_mm": "string (optional)"
     }
@@ -115,7 +146,7 @@ export async function aiExtractVocabulary(textChunk: string): Promise<ExtractedW
     return [];
   }
   const result = (await chatJSON(
-    "You are a Japanese-Burmese dictionary builder. Extract vocabulary words and grammar points from the given Japanese text.",
+    "You are a Japanese-Burmese dictionary builder. Extract vocabulary words and grammar points from the given Japanese text. If the text contains a Minna no Nihongo chapter header like 第1課, 第2課, or Lesson N, assign that lesson number to every word in the chunk.",
     `Extract all Japanese vocabulary from this text. Provide accurate Unicode Burmese (U+1000-U+109F) translations. If you cannot translate a word to Burmese confidently, still give your best translation.\n\nTEXT:\n${textChunk.slice(0, 6000)}`,
     EXTRACT_SCHEMA
   )) as { items?: ExtractedWord[] };
@@ -126,6 +157,7 @@ export async function aiExtractVocabulary(textChunk: string): Promise<ExtractedW
     ...i,
     kana: toHiragana(i.kana),
     jlpt_level: i.jlpt_level === "N4" ? "N4" : "N5",
+    lesson: typeof i.lesson === "number" && i.lesson >= 1 && i.lesson <= 25 ? i.lesson : null,
   }));
 }
 
