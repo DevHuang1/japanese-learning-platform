@@ -1,26 +1,95 @@
 @import "tailwindcss";
 
+@theme {
+  --color-paper: #f9f6f0;
+  --color-paper-deep: #efe9dd;
+  --color-paper-ink: #3d3a34;
+  --color-crimson: #bc002d;
+  --color-crimson-soft: #d64a6c;
+  --color-indigo-dark: #1c2d42;
+  --color-indigo-mid: #2e4a68;
+  --color-ink-line: #d8d0bf;
+
+  --font-jp: var(--font-noto-serif-jp);
+  --font-jp-mincho: var(--font-sawarabi-mincho);
+  --font-mm: var(--font-padauk);
+  --font-sans: var(--font-inter);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f9f6f0;
+  --foreground: #3d3a34;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  border-color: var(--color-ink-line);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.text-jp {
+  font-family: var(--font-noto-serif-jp), serif;
+}
+
+.text-mm {
+  font-family: var(--font-padauk), sans-serif;
+}
+
+/* Wabi-sabi paper texture */
+.paper-texture {
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(188, 0, 45, 0.02), transparent 45%),
+    radial-gradient(circle at 80% 70%, rgba(28, 45, 66, 0.03), transparent 40%);
+}
+
+.paper-card {
+  background: #fffdf8;
+  border: 1px solid var(--color-ink-line);
+  box-shadow:
+    0 1px 2px rgba(28, 45, 66, 0.06),
+    0 8px 24px -12px rgba(28, 45, 66, 0.18);
+}
+
+.paper-card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.paper-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 2px 4px rgba(28, 45, 66, 0.08),
+    0 16px 32px -16px rgba(28, 45, 66, 0.25);
+}
+
+.torii-bar {
+  height: 4px;
+  background: linear-gradient(90deg, #bc002d 0%, #bc002d 60%, rgba(188, 0, 45, 0.35) 100%);
+}
+
+::selection {
+  background: rgba(188, 0, 45, 0.18);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-paper-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: #c9bfa9;
+  border-radius: 6px;
+  border: 2px solid var(--color-paper-deep);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b3a88d;
 }

@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Vocabulary {
+  id                String            @id @default(cuid())
+  kanji             String?
+  kana              String
+  romaji            String?
+  burmeseMeaning    String            @map("burmese_meaning")
+  jlptLevel         String            @map("jlpt_level")
+  partOfSpeech      String?           @map("part_of_speech")
+  exampleSentenceJp String?           @map("example_sentence_jp")
+  exampleSentenceMm String?           @map("example_sentence_mm")
+  pdfSource         String?           @map("pdf_source")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  progress          UserWordProgress?
+
+  @@index([jlptLevel])
+  @@map("vocabulary")
+}
+
+model UserWordProgress {
+  id             String     @id @default(cuid())
+  vocabId        String     @unique @map("vocab_id")
+  vocab          Vocabulary @relation(fields: [vocabId], references: [id], onDelete: Cascade)
+  easeFactor     Float      @default(2.5) @map("ease_factor")
+  interval       Int        @default(0)
+  repetitions    Int        @default(0)
+  nextReviewDate DateTime   @default(now()) @map("next_review_date")
+  status         String     @default("learning") @map("status")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  @@map("user_word_progress")
+}
+
+model StudyLog {
+  id               String   @id @default(cuid())
+  studyDate        DateTime @map("study_date")
+  wordsReviewed    Int      @default(0) @map("words_reviewed")
+  quizzesCompleted Int      @default(0) @map("quizzes_completed")
+  accuracyScore    Float    @default(0.0) @map("accuracy_score")
+  timeSpentMinutes Int      @default(0) @map("time_spent_minutes")
+
+  @@map("study_logs")
+}
