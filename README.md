@@ -32,9 +32,19 @@ Run ingestion from the UI (**PDF Ingest** page) or the CLI:
 npm run ingest
 ```
 
-PDFs are extracted with `pdf-parse`, split into chunks, and the AI returns
-structured JSON (kanji / kana / romaji / Unicode Burmese meaning / JLPT level /
-example sentences) which is deduped and stored in SQLite.
+PDFs are extracted page by page with `pdf-parse`, cleaned for common line-break and
+invisible-character artifacts, and split at line/sentence boundaries while retaining
+page and lesson context. The AI returns structured JSON (kanji / kana / romaji /
+Unicode Burmese meaning / JLPT level / example sentences), which is runtime-validated,
+normalized to hiragana, deduplicated, and stored in SQLite. Image-only PDFs are
+reported as non-extractable and require OCR before ingestion.
+
+Optional ingestion limits can be tuned in `.env`:
+```env
+PDF_MAX_BYTES=26214400  # 25 MiB default
+PDF_MAX_PAGES=250
+PDF_CHUNK_CHARS=4200
+```
 
 > Without an API key the app still works fully offline using the seeded data
 > (quizzes are procedurally generated). Ingestion simply waits for a key.
@@ -56,6 +66,7 @@ example sentences) which is deduped and stored in SQLite.
 - `npm run db:migrate` — apply schema migrations
 - `npm run db:seed` — reset + seed 20 demo words
 - `npm run ingest` — scan PDF folder and insert AI-parsed vocabulary
+- `npm test` — run ingestion normalization and chunking regression tests
 - `npm run lint` / `npm run build` — checks and production build
 
 ## Stack

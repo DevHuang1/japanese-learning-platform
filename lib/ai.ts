@@ -1,4 +1,9 @@
-import { toHiragana } from "./japanese";
+import {
+  canonicalVocabularyKey,
+  detectJlptLevel,
+  detectLessonNumber,
+  normalizeExtractedWord,
+} from "./ingestion-utils";
 
 export interface ExtractedWord {
   kanji?: string;
@@ -115,24 +120,33 @@ function rateLimitDelayMs(res: Response, attempt: number): number {
 }
 
 function stripFence(text: string): string {
-  return text
+  const unfenced = text
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/\s*```$/, "")
     .trim();
+  const firstObject = unfenced.indexOf("{");
+  const firstArray = unfenced.indexOf("[");
+  const starts = [firstObject, firstArray].filter((index) => index >= 0);
+  if (starts.length === 0) return unfenced;
+  const start = Math.min(...starts);
+  const lastObject = unfenced.lastIndexOf("}");
+  const lastArray = unfenced.lastIndexOf("]");
+  const end = Math.max(lastObject, lastArray);
+  return end > start ? unfenced.slice(start, end + 1) : unfenced;
 }
 
 const EXTRACT_SCHEMA = `{
   "items": [
     {
-      "kanji": "string (optional)",
-      "kana": "string (required, hiragana reading)",
+      "kanji": "string (optional, the dictionary headword only)",
+      "kana": "string (required, hiragana reading for the headword)",
       "romaji": "string (optional)",
-      "burmese_meaning": "string (required, Unicode Burmese, U+1000-U+109F)",
+      "burmese_meaning": "string (required, Unicode Burmese translation)",
       "jlpt_level": "N5 or N4",
       "part_of_speech": "string (optional)",
-      "lesson": "number (optional, Minna no Nihongo lesson 1-25. Detect from the chapter header such as 第1課 / 第2課 / Lesson N in the text. Use null if unknown)",
+      "lesson": "number or null (Minna no Nihongo lesson 1-25)",
       "example_sentence_jp": "string (optional)",
-      "example_sentence_mm": "string (optional)"
+      "example_sentence_mm": "string (optional, Unicode Burmese)"
     }
   ]
 }`;
@@ -142,24 +156,35 @@ export function aiProvider(): Provider {
 }
 
 export async function aiExtractVocabulary(textChunk: string): Promise<ExtractedWord[]> {
-  if (detectProvider() === "none") {
-    return [];
-  }
-  const result = (await chatJSON(
-    "You are a Japanese-Burmese dictionary builder. Extract vocabulary words and grammar points from the given Japanese text. If the text contains a Minna no Nihongo chapter header like 第1課, 第2課, or Lesson N, assign that lesson number to every word in the chunk.",
-    `Extract all Japanese vocabulary from this text. Provide accurate Unicode Burmese (U+1000-U+109F) translations. If you cannot translate a word to Burmese confidently, still give your best translation.\n\nTEXT:\n${textChunk.slice(0, 6000)}`,
-    EXTRACT_SCHEMA
-  )) as { items?: ExtractedWord[] };
-  const items = (result?.items ?? []).filter(
-    (i) => i.kana && i.burmese_meaning
+  if (detectProvider() === "none") return [];
+
+  const fallbackLevel = detectJlptLevel(textChunk) ?? "N5";
+  const result = await chatJSON(
+    "You are a careful Japanese-Burmese dictionary builder. Extract only useful standalone vocabulary headwords from the supplied PDF text. Do not invent words, do not return whole sentences, and do not return a row unless the reading and Burmese meaning are both known. Preserve the source meaning, but normalize obvious PDF line-break artifacts. If a Minna no Nihongo header such as 第1課, 第2課, or Lesson 10 appears, assign that lesson to nearby words until another lesson header appears.",
+    `Extract vocabulary from this page-aware PDF chunk. Return one row per dictionary headword and avoid duplicates. Read kana/kanji that may be separated by spaces or line breaks as one word. Every burmese_meaning and example_sentence_mm must contain Unicode Burmese script. Use jlpt_level ${fallbackLevel} only when the source does not identify a level.\n\nTEXT:\n${textChunk.slice(0, 6000)}`,
+    EXTRACT_SCHEMA,
   );
-  return items.map((i) => ({
-    ...i,
-    kana: toHiragana(i.kana),
-    jlpt_level: i.jlpt_level === "N4" ? "N4" : "N5",
-    lesson: typeof i.lesson === "number" && i.lesson >= 1 && i.lesson <= 25 ? i.lesson : null,
-  }));
+
+  const rawItems = Array.isArray(result)
+    ? result
+    : result && typeof result === "object" && Array.isArray((result as { items?: unknown }).items)
+      ? (result as { items: unknown[] }).items
+      : [];
+  const unique = new Map<string, ExtractedWord>();
+
+  for (const rawItem of rawItems) {
+    const word = normalizeExtractedWord(rawItem, {
+      jlptLevel: fallbackLevel,
+      lesson: detectLessonNumber(textChunk),
+    });
+    if (!word) continue;
+    const key = canonicalVocabularyKey(word);
+    if (!unique.has(key)) unique.set(key, word);
+  }
+
+  return [...unique.values()];
 }
+
 
 export async function aiGenerateQuiz(words: { kanji?: string; kana: string; burmese_meaning: string }[], count: number): Promise<QuizQuestion[]> {
   if (detectProvider() === "none") {
