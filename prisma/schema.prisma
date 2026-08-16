@@ -8,21 +8,23 @@ datasource db {
 }
 
 model Vocabulary {
-  id                String            @id @default(cuid())
-  canonicalKey      String?           @unique @map("canonical_key")
-  kanji             String?
-  kana              String
-  romaji            String?
-  burmeseMeaning    String            @map("burmese_meaning")
-  jlptLevel         String            @map("jlpt_level")
-  partOfSpeech      String?           @map("part_of_speech")
-  exampleSentenceJp String?           @map("example_sentence_jp")
-  exampleSentenceMm String?           @map("example_sentence_mm")
-  pdfSource         String?           @map("pdf_source")
-  lesson            Int?              @map("lesson")
-  createdAt         DateTime          @default(now()) @map("created_at")
-    progress          UserWordProgress?
-  matchReviews      VocabularyMatchReview[]
+  id                  String                  @id @default(cuid())
+  canonicalKey        String?                 @unique @map("canonical_key")
+  kanji               String?
+  kana                String
+  romaji              String?
+  burmeseMeaning      String                  @map("burmese_meaning")
+  jlptLevel           String                  @map("jlpt_level")
+  partOfSpeech        String?                 @map("part_of_speech")
+  exampleSentenceJp   String?                 @map("example_sentence_jp")
+  exampleSentenceMm   String?                 @map("example_sentence_mm")
+  pdfSource           String?                 @map("pdf_source")
+  lesson              Int?                    @map("lesson")
+  createdAt           DateTime                @default(now()) @map("created_at")
+  progress            UserWordProgress?
+  matchReviews        VocabularyMatchReview[]
+  ingestionCandidates IngestionCandidate[]
+
   @@index([jlptLevel])
   @@index([lesson])
   @@index([kana])
@@ -31,21 +33,137 @@ model Vocabulary {
 }
 
 model VocabularyMatchReview {
-  id             String      @id @default(cuid())
-  reviewKey      String      @unique @map("review_key")
-  incomingJson   String      @map("incoming_json")
-  candidateId    String?     @map("candidate_id")
-  score          Float
-  reasonsJson    String      @map("reasons_json")
+  id              String      @id @default(cuid())
+  reviewKey       String      @unique @map("review_key")
+  incomingJson    String      @map("incoming_json")
+  candidateId     String?     @map("candidate_id")
+  score           Float
+  reasonsJson     String      @map("reasons_json")
   explanationJson String?     @map("explanation_json")
-  source         String
-  status         String      @default("pending")
-  createdAt      DateTime    @default(now()) @map("created_at")
-  candidate      Vocabulary? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+  source          String
+  status          String      @default("pending")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  candidate       Vocabulary? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([candidateId])
   @@map("vocabulary_match_reviews")
+}
+
+model IngestionBatch {
+  id                  String               @id @default(cuid())
+  sourceName          String               @map("source_name")
+  sourceHash          String?              @map("source_hash")
+  status              String               @default("queued")
+  startedAt           DateTime?            @map("started_at")
+  completedAt         DateTime?            @map("completed_at")
+  selectablePages     Int                  @default(0) @map("selectable_pages")
+  ocrPages            Int                  @default(0) @map("ocr_pages")
+  totalPages          Int                  @default(0) @map("total_pages")
+  extractedCandidates Int                  @default(0) @map("extracted_candidates")
+  importedCandidates  Int                  @default(0) @map("imported_candidates")
+  duplicateCount      Int                  @default(0) @map("duplicate_count")
+  reviewCount         Int                  @default(0) @map("review_count")
+  failedPages         Int                  @default(0) @map("failed_pages")
+  durationMs          Int?                 @map("duration_ms")
+  createdAt           DateTime             @default(now()) @map("created_at")
+  pages               IngestionPage[]
+  candidates          IngestionCandidate[]
+  metrics             IngestionMetric[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([sourceHash])
+  @@map("ingestion_batches")
+}
+
+model IngestionPage {
+  id              String               @id @default(cuid())
+  batchId         String               @map("batch_id")
+  pageNumber      Int                  @map("page_number")
+  mode            String               @default("selectable")
+  status          String               @default("queued")
+  sourceImagePath String?              @map("source_image_path")
+  rawText         String?              @map("raw_text")
+  normalizedText  String?              @map("normalized_text")
+  ocrLanguages    String?              @map("ocr_languages")
+  ocrConfidence   Float?               @map("ocr_confidence")
+  extractionMs    Int?                 @map("extraction_ms")
+  ocrMs           Int?                 @map("ocr_ms")
+  parseMs         Int?                 @map("parse_ms")
+  errorCategory   String?              @map("error_category")
+  errorMessage    String?              @map("error_message")
+  revision        Int                  @default(0)
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+  batch           IngestionBatch       @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  candidates      IngestionCandidate[]
+  corrections     OcrCorrection[]
+
+  @@unique([batchId, pageNumber])
+  @@index([batchId, status])
+  @@index([status, ocrConfidence])
+  @@map("ingestion_pages")
+}
+
+model IngestionCandidate {
+  id           String          @id @default(cuid())
+  batchId      String          @map("batch_id")
+  pageId       String          @map("page_id")
+  incomingJson String          @map("incoming_json")
+  canonicalKey String?         @map("canonical_key")
+  decisionKind String          @map("decision_kind")
+  status       String          @default("pending")
+  score        Float?
+  reasonsJson  String?         @map("reasons_json")
+  vocabularyId String?         @map("vocabulary_id")
+  reviewId     String?         @map("review_id")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+  batch        IngestionBatch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  page         IngestionPage   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  vocabulary   Vocabulary?     @relation(fields: [vocabularyId], references: [id], onDelete: SetNull)
+  corrections  OcrCorrection[]
+
+  @@index([batchId, status])
+  @@index([pageId])
+  @@index([decisionKind])
+  @@map("ingestion_candidates")
+}
+
+model OcrCorrection {
+  id             String              @id @default(cuid())
+  pageId         String              @map("page_id")
+  candidateId    String?             @map("candidate_id")
+  baseRevision   Int                 @map("base_revision")
+  revision       Int
+  originalText   String              @map("original_text")
+  correctedText  String              @map("corrected_text")
+  fieldEditsJson String?             @map("field_edits_json")
+  reason         String?
+  actor          String              @default("local-user")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  page           IngestionPage       @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  candidate      IngestionCandidate? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+
+  @@unique([pageId, revision])
+  @@index([pageId, createdAt])
+  @@map("ocr_corrections")
+}
+
+model IngestionMetric {
+  id             String         @id @default(cuid())
+  batchId        String         @map("batch_id")
+  name           String
+  value          Float
+  unit           String?
+  dimensionsJson String?        @map("dimensions_json")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  batch          IngestionBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId, name])
+  @@index([name, createdAt])
+  @@map("ingestion_metrics")
 }
 
 model UserWordProgress {

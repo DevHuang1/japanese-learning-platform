@@ -8,6 +8,7 @@ import {
   BookOpenText,
   BrainCircuit,
   FileSearch,
+  Activity,
   Languages,
   ClipboardCheck,
 } from "lucide-react";
@@ -21,6 +22,7 @@ const NAV = [
   { href: "/vocabulary", label: "Vocabulary", icon: Languages },
   { href: "/reviews", label: "Reviews", icon: ClipboardCheck },
   { href: "/ingest", label: "PDF Ingest", icon: FileSearch },
+  { href: "/ingestion", label: "Ingestion Quality", icon: Activity },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
