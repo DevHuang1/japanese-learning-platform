@@ -54,7 +54,7 @@ test.describe("vocabulary review queue", () => {
     await expect(page.getByRole("heading", { name: "Vocabulary Reviews" })).toBeVisible();
 
     const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa"])
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
       .analyze();
     expect(results.violations).toEqual([]);
   });
