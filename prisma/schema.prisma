@@ -37,6 +37,7 @@ model VocabularyMatchReview {
   candidateId    String?     @map("candidate_id")
   score          Float
   reasonsJson    String      @map("reasons_json")
+  explanationJson String?     @map("explanation_json")
   source         String
   status         String      @default("pending")
   createdAt      DateTime    @default(now()) @map("created_at")

@@ -17,10 +17,30 @@ export interface StoredVocabularyForMatch {
   lesson?: number | null;
 }
 
+export interface MatchExplanation {
+  summary: string;
+  confidence: "high" | "medium" | "low";
+  signals: Array<{
+    label: string;
+    value: string;
+    weight: number;
+    positive: boolean;
+  }>;
+  normalizedIncoming: { surface: string; reading: string };
+  normalizedCandidate: { surface: string; reading: string };
+  collisionRisk: "low" | "medium" | "high";
+}
+
 export type VocabularyMatchDecision =
   | { kind: "exact"; existingId: string }
   | { kind: "enrich"; existingId: string; reason: string }
-  | { kind: "review"; existingId: string; score: number; reasons: string[] }
+  | {
+      kind: "review";
+      existingId: string;
+      score: number;
+      reasons: string[];
+      explanation: MatchExplanation;
+    }
   | { kind: "new" };
 
 function normalizeMeaning(value: string): string {
@@ -136,17 +156,58 @@ export function decideVocabularyMatch(
       );
 
       if (!sameSurface || readingDistance > 1 || !sameMeaning) return null;
-      const score = Number(
-        (0.88 + (sameMeaning ? 0.08 : 0) - readingDistance * 0.05).toFixed(3),
+      const meaningScore = meaningSimilarity(
+        incoming.burmese_meaning,
+        existing.burmeseMeaning,
       );
+      const score = Number(
+        (0.55 + 0.25 * (readingDistance === 0 ? 1 : 0) + 0.2 * meaningScore).toFixed(3),
+      );
+      const explanation: MatchExplanation = {
+        summary:
+          readingDistance === 0
+            ? "The Japanese surface and reading agree; confirm whether the translation represents the same learner entry."
+            : "The Japanese surface agrees and the reading differs by one character, which is consistent with a possible OCR error.",
+        confidence: score >= 0.85 ? "high" : score >= 0.7 ? "medium" : "low",
+        signals: [
+          {
+            label: "Kanji surface",
+            value: "exact normalized match",
+            weight: 0.55,
+            positive: true,
+          },
+          {
+            label: "Kana reading",
+            value: `edit distance ${readingDistance}`,
+            weight: 0.25,
+            positive: readingDistance === 0,
+          },
+          {
+            label: "Burmese meaning",
+            value: `${Math.round(meaningScore * 100)}% character-bigram similarity`,
+            weight: 0.2,
+            positive: sameMeaning,
+          },
+        ],
+        normalizedIncoming: {
+          surface: incomingIdentity.surfaceKey,
+          reading: incomingIdentity.readingKey,
+        },
+        normalizedCandidate: {
+          surface: existingIdentity.surfaceKey,
+          reading: existingIdentity.readingKey,
+        },
+        collisionRisk: readingDistance === 0 && meaningScore < 0.75 ? "high" : "medium",
+      };
       return {
         id: existing.id,
         score,
         reasons: [
           "same normalized kanji surface",
           `kana edit distance ${readingDistance}`,
-          "compatible Burmese meaning",
+          `compatible Burmese meaning (${Math.round(meaningScore * 100)}%)`,
         ],
+        explanation,
       };
     })
     .filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== null)
@@ -159,6 +220,7 @@ export function decideVocabularyMatch(
       existingId: best.id,
       score: best.score,
       reasons: best.reasons,
+      explanation: best.explanation,
     };
   }
 

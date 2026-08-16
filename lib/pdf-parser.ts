@@ -121,6 +121,7 @@ async function saveMatchReview(
   candidateId: string,
   score: number,
   reasons: string[],
+  explanation: unknown,
   pdfSource: string,
 ): Promise<void> {
   const reviewKey = `${candidateId}\u0000${canonicalVocabularyKey(incoming)}`;
@@ -133,6 +134,7 @@ async function saveMatchReview(
       candidateId,
       score,
       reasonsJson: JSON.stringify(reasons),
+      explanationJson: JSON.stringify(explanation),
       source: pdfSource,
     },
   });
@@ -196,6 +198,7 @@ export async function upsertWords(
         decision.existingId,
         decision.score,
         decision.reasons,
+        decision.explanation,
         pdfSource,
       );
       reviewed++;

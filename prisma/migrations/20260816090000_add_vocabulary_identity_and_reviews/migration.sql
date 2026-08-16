@@ -1,4 +1,3 @@
--- Add a nullable canonical identity first so existing rows can be backfilled safely.
 ALTER TABLE "vocabulary" ADD COLUMN "canonical_key" TEXT;
 
 -- SQLite unique indexes allow multiple NULL values while legacy rows are pending backfill.

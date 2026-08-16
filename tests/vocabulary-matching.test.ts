@@ -67,7 +67,11 @@ test("queues a review for a one-character OCR reading difference", () => {
   );
   assert.equal(result.kind, "review");
   assert.equal(result.existingId, "v1");
-  assert.ok(result.score >= 0.9);
+  assert.ok(result.score >= 0.7);
+  assert.equal(result.explanation.confidence, "medium");
+  assert.equal(result.explanation.normalizedIncoming.surface, "食べる");
+  assert.equal(result.explanation.normalizedCandidate.reading, "たべる");
+  assert.match(result.explanation.summary, /reading differs by one character/);
 });
 
 test("keeps distinct surface forms separate even when the reading matches", () => {

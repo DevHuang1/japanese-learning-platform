@@ -1,13 +1,31 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Check, Loader2, RefreshCw, X } from "lucide-react";
+import { Check, ChevronDown, Info, Loader2, RefreshCw, X } from "lucide-react";
+import { VocabularyCollisionPanel } from "@/components/VocabularyCollisionPanel";
+
+type ExplanationSignal = {
+  label: string;
+  value: string;
+  weight: number;
+  positive: boolean;
+};
+
+type MatchExplanation = {
+  summary: string;
+  confidence: "high" | "medium" | "low";
+  signals: ExplanationSignal[];
+  normalizedIncoming: { surface: string; reading: string };
+  normalizedCandidate: { surface: string; reading: string };
+  collisionRisk: "low" | "medium" | "high";
+};
 
 type Review = {
   id: string;
   incomingJson: string;
   score: number;
   reasonsJson: string;
+  explanationJson: string | null;
   source: string;
   createdAt: string;
   candidate: {
@@ -36,6 +54,31 @@ function parseReasons(review: Review): string[] {
   } catch {
     return [];
   }
+}
+
+function parseExplanation(review: Review): MatchExplanation | null {
+  if (!review.explanationJson) return null;
+  try {
+    return JSON.parse(review.explanationJson) as MatchExplanation;
+  } catch {
+    return null;
+  }
+}
+
+function confidenceClass(confidence: MatchExplanation["confidence"]) {
+  return confidence === "high"
+    ? "bg-emerald-100 text-emerald-800"
+    : confidence === "medium"
+      ? "bg-amber-100 text-amber-800"
+      : "bg-crimson/10 text-crimson";
+}
+
+function riskClass(risk: MatchExplanation["collisionRisk"]) {
+  return risk === "high"
+    ? "bg-crimson/10 text-crimson"
+    : risk === "medium"
+      ? "bg-amber-100 text-amber-800"
+      : "bg-emerald-100 text-emerald-800";
 }
 
 export function VocabularyReviewPanel() {
@@ -92,77 +135,125 @@ export function VocabularyReviewPanel() {
           Fuzzy matches are kept separate until you confirm them.
         </p>
         <button
+          type="button"
           onClick={() => void load()}
           disabled={loading}
+          aria-label="Refresh vocabulary review queue"
           className="inline-flex items-center gap-2 rounded-lg border border-paper-ink/15 px-3 py-2 text-sm text-indigo-dark hover:bg-paper-deep/50 disabled:opacity-50"
         >
-          <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> Refresh
+          <RefreshCw size={15} className={loading ? "animate-spin" : ""} aria-hidden="true" /> Refresh
         </button>
       </div>
 
       {error && (
-        <div className="rounded-lg border border-crimson/20 bg-crimson/5 px-4 py-3 text-sm text-crimson">
+        <div role="alert" className="rounded-lg border border-crimson/20 bg-crimson/5 px-4 py-3 text-sm text-crimson">
           {error}
         </div>
       )}
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm text-paper-ink/60">
-          <Loader2 size={16} className="animate-spin" /> Loading review queue…
+        <div role="status" className="flex items-center gap-2 text-sm text-paper-ink/60">
+          <Loader2 size={16} className="animate-spin" aria-hidden="true" /> Loading review queue…
         </div>
       ) : reviews.length === 0 ? (
         <div className="paper-card rounded-2xl p-8 text-center text-sm text-paper-ink/60">
           No pending fuzzy matches.
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4" aria-label="Pending fuzzy vocabulary reviews">
           {reviews.map((review) => {
             const incoming = parseIncoming(review);
             const reasons = parseReasons(review);
+            const explanation = parseExplanation(review);
             const busy = busyId === review.id;
+            const titleId = `review-title-${review.id}`;
             return (
-              <article key={review.id} className="paper-card rounded-2xl p-5">
+              <article key={review.id} aria-labelledby={titleId} className="paper-card rounded-2xl p-5">
+                <h2 id={titleId} className="sr-only">Vocabulary match review</h2>
                 <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
                   <div>
                     <div className="text-xs uppercase tracking-wide text-paper-ink/45">Incoming</div>
-                    <div className="mt-1 font-jp text-2xl text-indigo-dark">
-                      {incoming.kanji ?? incoming.kana}
-                    </div>
+                    <div className="mt-1 font-jp text-2xl text-indigo-dark">{incoming.kanji ?? incoming.kana}</div>
                     <div className="font-jp text-sm text-paper-ink/70">{incoming.kana}</div>
                     <div className="mt-2 text-sm text-paper-ink/75">{incoming.burmese_meaning}</div>
                   </div>
-                  <div className="text-center text-xs font-semibold text-crimson">
-                    {Math.round(review.score * 100)}% match
+                  <div className="text-center">
+                    <div className="text-xs font-semibold text-crimson">{Math.round(review.score * 100)}% match</div>
+                    <progress
+                      aria-label={`Match confidence ${Math.round(review.score * 100)} percent`}
+                      className="mt-2 h-2 w-24 accent-crimson"
+                      value={review.score * 100}
+                      max={100}
+                    />
                   </div>
                   <div>
                     <div className="text-xs uppercase tracking-wide text-paper-ink/45">Existing candidate</div>
-                    <div className="mt-1 font-jp text-2xl text-indigo-dark">
-                      {review.candidate?.kanji ?? review.candidate?.kana ?? "Deleted candidate"}
-                    </div>
+                    <div className="mt-1 font-jp text-2xl text-indigo-dark">{review.candidate?.kanji ?? review.candidate?.kana ?? "Deleted candidate"}</div>
                     <div className="font-jp text-sm text-paper-ink/70">{review.candidate?.kana}</div>
                     <div className="mt-2 text-sm text-paper-ink/75">{review.candidate?.burmeseMeaning}</div>
                   </div>
                 </div>
+
                 <div className="mt-4 flex flex-wrap gap-2 text-xs text-paper-ink/60">
                   {reasons.map((reason) => (
                     <span key={reason} className="rounded-full bg-paper-deep/70 px-3 py-1">{reason}</span>
                   ))}
+                  {explanation && (
+                    <>
+                      <span className={`rounded-full px-3 py-1 font-semibold ${confidenceClass(explanation.confidence)}`}>
+                        {explanation.confidence} confidence
+                      </span>
+                      <span className={`rounded-full px-3 py-1 font-semibold ${riskClass(explanation.collisionRisk)}`}>
+                        {explanation.collisionRisk} collision risk
+                      </span>
+                    </>
+                  )}
                   <span className="rounded-full bg-paper-deep/70 px-3 py-1">Source: {review.source}</span>
                 </div>
+
+                <details className="mt-4 rounded-xl border border-paper-ink/10 bg-paper-deep/25 px-4 py-3">
+                  <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-indigo-dark">
+                    <Info size={15} aria-hidden="true" /> Why was this suggested? <ChevronDown size={15} className="ml-auto" aria-hidden="true" />
+                  </summary>
+                  <div className="mt-3 space-y-3 text-sm text-paper-ink/75">
+                    <p>{explanation?.summary ?? "This candidate was generated by the fuzzy matching rules."}</p>
+                    {explanation && (
+                      <>
+                        <ul className="space-y-2" aria-label="Match evidence">
+                          {explanation.signals.map((signal) => (
+                            <li key={signal.label} className="flex items-center justify-between gap-3">
+                              <span className={signal.positive ? "text-emerald-800" : "text-crimson"}>
+                                {signal.positive ? "✓" : "!"} {signal.label}
+                              </span>
+                              <span className="text-right text-paper-ink/60">{signal.value} · {Math.round(signal.weight * 100)}%</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="grid gap-2 rounded-lg bg-paper/70 p-3 text-xs md:grid-cols-2">
+                          <div><span className="font-semibold">Incoming normalized:</span> {explanation.normalizedIncoming.surface || "(kana only)"} · {explanation.normalizedIncoming.reading}</div>
+                          <div><span className="font-semibold">Candidate normalized:</span> {explanation.normalizedCandidate.surface || "(kana only)"} · {explanation.normalizedCandidate.reading}</div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </details>
+
                 <div className="mt-5 flex justify-end gap-2">
                   <button
+                    type="button"
                     onClick={() => void decide(review.id, "reject")}
                     disabled={busy}
                     className="inline-flex items-center gap-2 rounded-lg border border-paper-ink/15 px-3 py-2 text-sm text-paper-ink/70 hover:bg-paper-deep/50 disabled:opacity-50"
                   >
-                    <X size={15} /> Keep separate
+                    <X size={15} aria-hidden="true" /> Keep separate
                   </button>
                   <button
+                    type="button"
                     onClick={() => void decide(review.id, "accept")}
                     disabled={busy}
                     className="inline-flex items-center gap-2 rounded-lg bg-crimson px-3 py-2 text-sm font-semibold text-paper hover:bg-crimson-soft disabled:opacity-50"
                   >
-                    {busy ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+                    {busy ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : <Check size={15} aria-hidden="true" />}
                     Accept match
                   </button>
                 </div>
@@ -171,6 +262,7 @@ export function VocabularyReviewPanel() {
           })}
         </div>
       )}
+      <VocabularyCollisionPanel />
     </div>
   );
 }

@@ -37,7 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <div>
               <div className="font-jp text-lg leading-none tracking-wide"><GlossText>和学</GlossText></div>
-              <div className="text-[11px] text-paper/50 mt-1">Wagaku · JLPT Study</div>
+              <div className="text-[11px] text-paper/75 mt-1">Wagaku · JLPT Study</div>
             </div>
           </div>
 
@@ -62,7 +62,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          <div className="hidden md:block px-6 py-5 border-t border-white/10 text-[11px] text-paper/40 leading-relaxed">
+          <div className="hidden md:block px-6 py-5 border-t border-white/10 text-[11px] text-paper/75 leading-relaxed">
             JLPT N5 · N4
             <br />
             Local-first · Personal

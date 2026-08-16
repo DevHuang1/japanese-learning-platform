@@ -32,8 +32,20 @@ async function main() {
       reasonsJson: JSON.stringify([
         "same normalized kanji surface",
         "kana edit distance 1",
-        "compatible Burmese meaning",
+        "compatible Burmese meaning (100%)",
       ]),
+      explanationJson: JSON.stringify({
+        summary: "The Japanese surface agrees and the reading differs by one character, which is consistent with a possible OCR error.",
+        confidence: "high",
+        signals: [
+          { label: "Kanji surface", value: "exact normalized match", weight: 0.55, positive: true },
+          { label: "Kana reading", value: "edit distance 1", weight: 0.25, positive: false },
+          { label: "Burmese meaning", value: "100% character-bigram similarity", weight: 0.2, positive: true },
+        ],
+        normalizedIncoming: { surface: "検証", reading: "けんしょゐ" },
+        normalizedCandidate: { surface: "検証", reading: "けんしょう" },
+        collisionRisk: "medium",
+      }),
     },
     {
       reviewKey: "playwright-reject-review",
@@ -48,10 +60,49 @@ async function main() {
       reasonsJson: JSON.stringify([
         "same normalized kanji surface",
         "kana edit distance 1",
-        "compatible Burmese meaning",
+        "compatible Burmese meaning (100%)",
       ]),
+      explanationJson: JSON.stringify({
+        summary: "The Japanese surface agrees and the reading differs by one character, which is consistent with a possible OCR error.",
+        confidence: "high",
+        signals: [
+          { label: "Kanji surface", value: "exact normalized match", weight: 0.55, positive: true },
+          { label: "Kana reading", value: "edit distance 1", weight: 0.25, positive: false },
+          { label: "Burmese meaning", value: "100% character-bigram similarity", weight: 0.2, positive: true },
+        ],
+        normalizedIncoming: { surface: "検証", reading: "けんしょゐ" },
+        normalizedCandidate: { surface: "検証", reading: "けんしょう" },
+        collisionRisk: "medium",
+      }),
     },
   ];
+
+  await db.vocabulary.upsert({
+    where: { canonicalKey: "surface:重複\u0000reading:ちょうふく" },
+    update: {},
+    create: {
+      canonicalKey: "surface:重複\u0000reading:ちょうふく",
+      kanji: "重複",
+      kana: "ちょうふく",
+      romaji: "choufuku",
+      burmeseMeaning: "ထပ်နေခြင်း",
+      jlptLevel: "N3",
+      partOfSpeech: "noun",
+      pdfSource: "playwright-collision-kept.pdf",
+    },
+  });
+  await db.vocabulary.create({
+    data: {
+      canonicalKey: null,
+      kanji: "重複",
+      kana: "ちょうふく",
+      romaji: "choufuku",
+      burmeseMeaning: "ထပ်နေခြင်း",
+      jlptLevel: "N3",
+      partOfSpeech: "noun",
+      pdfSource: "playwright-collision.pdf",
+    },
+  });
 
   for (const fixture of fixtures) {
     await db.vocabularyMatchReview.create({
