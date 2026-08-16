@@ -12,7 +12,9 @@
 
 # testing
 /coverage
-/artifacts/
+/artifacts/*
+!/artifacts/
+!/artifacts/ingestion-accuracy.json
 /test-results/
 /playwright-report/
 

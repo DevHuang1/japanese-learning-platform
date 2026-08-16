@@ -1,0 +1,116 @@
+{
+  "generatedAt": "2026-08-16T12:59:29.436Z",
+  "manifestPath": "tests/fixtures/jlpt/manifest.json",
+  "passed": 8,
+  "failed": 0,
+  "total": 8,
+  "accuracy": 1,
+  "matchResults": [
+    {
+      "id": "ocr-reading-variation",
+      "passed": true,
+      "expected": "review",
+      "actual": "review",
+      "score": 0.75
+    },
+    {
+      "id": "exact-normalized-kana",
+      "passed": true,
+      "expected": "exact",
+      "actual": "exact"
+    },
+    {
+      "id": "homograph-protection",
+      "passed": true,
+      "expected": "new",
+      "actual": "new"
+    }
+  ],
+  "pdfResults": [
+    {
+      "id": "smoke-n4-selectable-text",
+      "path": "tests/fixtures/jlpt/smoke-n4.pdf",
+      "passed": true,
+      "pages": 1,
+      "chunks": 1,
+      "characters": 55,
+      "missingText": [],
+      "selectableText": true,
+      "expectNoSelectableText": false,
+      "detectedJlpt": "N4",
+      "detectedLesson": 2
+    },
+    {
+      "id": "smoke-n5-two-lessons",
+      "path": "tests/fixtures/jlpt/smoke-n5-lessons.pdf",
+      "passed": true,
+      "pages": 2,
+      "chunks": 1,
+      "characters": 64,
+      "missingText": [],
+      "selectableText": true,
+      "expectNoSelectableText": false,
+      "detectedJlpt": "N5",
+      "detectedLesson": 1
+    },
+    {
+      "id": "smoke-n4-two-lessons",
+      "path": "tests/fixtures/jlpt/smoke-n4-lesson7.pdf",
+      "passed": true,
+      "pages": 2,
+      "chunks": 1,
+      "characters": 67,
+      "missingText": [],
+      "selectableText": true,
+      "expectNoSelectableText": false,
+      "detectedJlpt": "N4",
+      "detectedLesson": 7
+    },
+    {
+      "id": "smoke-n5-scanned-ocr",
+      "path": "tests/fixtures/jlpt/smoke-n5-scanned.pdf",
+      "passed": true,
+      "pages": 0,
+      "chunks": 0,
+      "characters": 0,
+      "missingText": [],
+      "selectableText": false,
+      "expectNoSelectableText": true,
+      "detectedJlpt": null,
+      "detectedLesson": null,
+      "ocr": {
+        "passed": true,
+        "languages": "jpn+eng",
+        "pages": 1,
+        "characters": 73,
+        "missingText": [],
+        "detectedJlpt": "N5",
+        "detectedLesson": 3,
+        "text": "N5 Lesson 3\n学校 がっこう 先生 せんせい\n学生 がくせい 本 ほん\n\nJLPT vocabulary practice sample"
+      }
+    },
+    {
+      "id": "smoke-n4-scanned-ocr",
+      "path": "tests/fixtures/jlpt/smoke-n4-scanned.pdf",
+      "passed": true,
+      "pages": 0,
+      "chunks": 0,
+      "characters": 0,
+      "missingText": [],
+      "selectableText": false,
+      "expectNoSelectableText": true,
+      "detectedJlpt": null,
+      "detectedLesson": null,
+      "ocr": {
+        "passed": true,
+        "languages": "jpn+eng",
+        "pages": 1,
+        "characters": 75,
+        "missingText": [],
+        "detectedJlpt": "N4",
+        "detectedLesson": 9,
+        "text": "N4 Lesson 9\n必要 ひつよう 準備 じゅんび\n説明 せつめい 経験 けいけん\nJLPT vocabulary practice sample"
+      }
+    }
+  ]
+}

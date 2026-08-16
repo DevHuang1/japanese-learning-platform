@@ -93,7 +93,12 @@ entry with its repository-relative path, required text, expected JLPT level, and
 expected lesson. The harness writes `artifacts/ingestion-accuracy.json` with pass/fail
 counts, extracted page/chunk metrics, and fuzzy-match scores. The checked-in baseline
 includes deterministic cases for OCR reading variation, exact kana normalization, and
-homograph protection; it does not call a paid AI provider during CI.
+homograph protection, plus selectable-text N5/N4 PDFs and image-only N5/N4 PDFs with
+Japanese Tesseract assertions. The OCR fixtures require `tesseract-ocr`,
+`tesseract-ocr-jpn`, and `poppler-utils`; the scheduled workflow installs them
+explicitly. Scanned-PDF report entries verify that selectable extraction is empty and
+that OCR recovers the declared text, JLPT level, lesson, and minimum character count.
+The harness does not call a paid AI provider during CI.
 
 The `/reviews` page supports both single collision resolution and atomic batch
 resolution. Select one radio target per collision group, then choose **Resolve selected**.

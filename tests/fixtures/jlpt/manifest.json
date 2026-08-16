@@ -7,6 +7,46 @@
       "requiredText": ["N4 Lesson 2", "学校", "食べる"],
       "expectedJlpt": "N4",
       "expectedLesson": 2
+    },
+    {
+      "id": "smoke-n5-two-lessons",
+      "path": "tests/fixtures/jlpt/smoke-n5-lessons.pdf",
+      "minimumPages": 2,
+      "requiredText": ["N5 Lesson 1", "N5 Lesson 2", "こんにちは", "学生"],
+      "expectedJlpt": "N5",
+      "expectedLesson": 1
+    },
+    {
+      "id": "smoke-n4-two-lessons",
+      "path": "tests/fixtures/jlpt/smoke-n4-lesson7.pdf",
+      "minimumPages": 2,
+      "requiredText": ["N4 Lesson 7", "N4 Lesson 8", "旅行", "説明"],
+      "expectedJlpt": "N4",
+      "expectedLesson": 7
+    },
+    {
+      "id": "smoke-n5-scanned-ocr",
+      "path": "tests/fixtures/jlpt/smoke-n5-scanned.pdf",
+      "expectNoSelectableText": true,
+      "ocr": {
+        "languages": "jpn+eng",
+        "requiredText": ["N5 Lesson 3", "学校", "がっこう", "学生", "本"],
+        "expectedJlpt": "N5",
+        "expectedLesson": 3,
+        "minimumCharacters": 20
+      }
+    },
+    {
+      "id": "smoke-n4-scanned-ocr",
+      "path": "tests/fixtures/jlpt/smoke-n4-scanned.pdf",
+      "expectNoSelectableText": true,
+      "ocr": {
+        "languages": "jpn+eng",
+        "requiredText": ["N4 Lesson 9", "必要", "準備", "説明", "経験"],
+        "expectedJlpt": "N4",
+        "expectedLesson": 9,
+        "minimumCharacters": 20
+      }
     }
   ],
   "matchCases": [
