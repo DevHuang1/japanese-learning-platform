@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
@@ -5,6 +6,14 @@ const reviewCards = (page: Page) =>
   page.getByLabel("Pending fuzzy vocabulary reviews").locator("article");
 
 test.describe("vocabulary review queue", () => {
+  test.beforeEach(() => {
+    execFileSync("npx", ["tsx", "scripts/seed-review-fixture.ts"], {
+      cwd: process.cwd(),
+      env: { ...process.env, DATABASE_URL: "file:/tmp/wagaku-playwright.db" },
+      stdio: "ignore",
+    });
+  });
+
   test("renders rich match evidence within the performance budget", async ({ page }) => {
     const startedAt = Date.now();
     await page.goto("/reviews", { waitUntil: "domcontentloaded" });
@@ -98,11 +107,13 @@ test.describe("vocabulary review queue", () => {
     await second.getByRole("radio", { name: /Keep .*for this collision/ }).first().check();
 
     await page.getByRole("button", { name: "Resolve 2 selected collision groups" }).click();
-    await expect(page.getByRole("status")).toContainText("Resolved 2 duplicate rows across 2 groups.");
-    await expect(page.getByText("No duplicate collision groups detected.")).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Resolved 2 duplicate rows across 2 groups." })).toBeVisible();
+    await expect(page.locator("article").filter({ hasText: "playwright-collision.pdf" })).toHaveCount(1);
+    await expect(page.locator("article").filter({ hasText: "playwright-collision-two.pdf" })).toHaveCount(0);
+    await expect(page.locator("article").filter({ hasText: "playwright-collision-three.pdf" })).toHaveCount(0);
 
     const response = await request.get("/api/vocabulary/collisions");
     expect(response.ok()).toBeTruthy();
-    expect((await response.json()).collisions).toHaveLength(0);
+    expect((await response.json()).collisions).toHaveLength(1);
   });
 });

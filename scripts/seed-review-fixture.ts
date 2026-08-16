@@ -3,6 +3,13 @@ import { PrismaClient } from "@prisma/client";
 const db = new PrismaClient();
 
 async function main() {
+  await db.vocabularyMatchReview.deleteMany({
+    where: { source: { startsWith: "playwright-" } },
+  });
+  await db.vocabulary.deleteMany({
+    where: { pdfSource: { startsWith: "playwright-" } },
+  });
+
   const existing = await db.vocabulary.upsert({
     where: { canonicalKey: "surface:検証\u0000reading:けんしょう" },
     update: {},

@@ -118,7 +118,7 @@ export function VocabularyCollisionPanel() {
           <h2 id="collision-heading" className="text-xl font-semibold text-indigo-dark">
             Duplicate collision groups
           </h2>
-          <p className="mt-1 text-sm text-paper-ink/60">
+          <p className="mt-1 text-sm text-paper-ink">
             These rows share the same normalized identity. Choose the row to keep; progress and review links are preserved.
           </p>
         </div>
@@ -149,11 +149,11 @@ export function VocabularyCollisionPanel() {
       {status && <div role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{status}</div>}
 
       {loading ? (
-        <div role="status" className="flex items-center gap-2 text-sm text-paper-ink/60">
+        <div role="status" className="flex items-center gap-2 text-sm text-paper-ink">
           <Loader2 size={16} className="animate-spin" aria-hidden="true" /> Checking duplicate groups…
         </div>
       ) : collisions.length === 0 ? (
-        <div className="paper-card rounded-2xl p-6 text-sm text-paper-ink/60">No duplicate collision groups detected.</div>
+        <div className="paper-card rounded-2xl p-6 text-sm text-paper-ink">No duplicate collision groups detected.</div>
       ) : (
         collisions.map((collision) => (
           <article
@@ -165,7 +165,7 @@ export function VocabularyCollisionPanel() {
               <AlertTriangle aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-amber-700" />
               <div className="min-w-0 flex-1">
                 <h3 id={`collision-${collision.canonicalKey}`} className="font-semibold text-indigo-dark">Identity collision</h3>
-                <code className="mt-1 block break-all text-xs text-paper-ink/60">{collision.canonicalKey}</code>
+                <code className="mt-1 block break-all text-xs text-paper-ink">{collision.canonicalKey}</code>
                 <ul className="mt-4 space-y-3" aria-label="Colliding vocabulary rows">
                   {collision.rows.map((row) => {
                     const rowLabel = `Keep ${row.kanji ?? row.kana} ${row.kana} for this collision`;
@@ -184,9 +184,9 @@ export function VocabularyCollisionPanel() {
                             />
                             <div>
                               <div className="font-jp text-lg text-indigo-dark">{row.kanji ?? row.kana}</div>
-                              <div className="font-jp text-sm text-paper-ink/70">{row.kana}</div>
-                              <div className="mt-1 text-sm text-paper-ink/75">{row.burmeseMeaning}</div>
-                              <div className="mt-1 text-xs text-paper-ink/50">{row.pdfSource ?? "manual"} · {row.progress ? `${row.progress.repetitions} reviews` : "no progress"}</div>
+                              <div className="font-jp text-sm text-paper-ink">{row.kana}</div>
+                              <div className="mt-1 text-sm text-paper-ink">{row.burmeseMeaning}</div>
+                              <div className="mt-1 text-xs text-paper-ink">{row.pdfSource ?? "manual"} · {row.progress ? `${row.progress.repetitions} reviews` : "no progress"}</div>
                             </div>
                           </div>
                           <button
