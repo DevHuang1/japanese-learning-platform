@@ -9,6 +9,7 @@ datasource db {
 
 model Vocabulary {
   id                String            @id @default(cuid())
+  canonicalKey      String?           @unique @map("canonical_key")
   kanji             String?
   kana              String
   romaji            String?
@@ -20,11 +21,30 @@ model Vocabulary {
   pdfSource         String?           @map("pdf_source")
   lesson            Int?              @map("lesson")
   createdAt         DateTime          @default(now()) @map("created_at")
-  progress          UserWordProgress?
-
+    progress          UserWordProgress?
+  matchReviews      VocabularyMatchReview[]
   @@index([jlptLevel])
   @@index([lesson])
+  @@index([kana])
+  @@index([kanji])
   @@map("vocabulary")
+}
+
+model VocabularyMatchReview {
+  id             String      @id @default(cuid())
+  reviewKey      String      @unique @map("review_key")
+  incomingJson   String      @map("incoming_json")
+  candidateId    String?     @map("candidate_id")
+  score          Float
+  reasonsJson    String      @map("reasons_json")
+  source         String
+  status         String      @default("pending")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  candidate      Vocabulary? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([candidateId])
+  @@map("vocabulary_match_reviews")
 }
 
 model UserWordProgress {

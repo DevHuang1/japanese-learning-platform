@@ -54,11 +54,36 @@ export function normalizeSurface(value: string | undefined): string {
     .trim();
 }
 
+export function normalizeVocabularySurface(value: string | null | undefined): string {
+  return normalizeSurface(value ?? undefined).replace(/[\s\u3000]+/g, "");
+}
+
+export interface VocabularyIdentity {
+  canonicalKey: string;
+  surfaceKey: string;
+  readingKey: string;
+}
+
+export function vocabularyIdentity(word: {
+  kanji?: string | null;
+  kana: string;
+}): VocabularyIdentity {
+  const surfaceKey = normalizeVocabularySurface(word.kanji);
+  const readingKey = normalizeKanaForStorage(word.kana);
+  return {
+    canonicalKey: surfaceKey
+      ? `surface:${surfaceKey}\u0000reading:${readingKey}`
+      : `reading:${readingKey}`,
+    surfaceKey,
+    readingKey,
+  };
+}
+
 export function canonicalVocabularyKey(word: {
   kanji?: string | null;
   kana: string;
 }): string {
-  return `${normalizeSurface(word.kanji ?? undefined)}\u0000${normalizeKanaForStorage(word.kana)}`;
+  return vocabularyIdentity(word).canonicalKey;
 }
 
 export function containsBurmese(value: string): boolean {

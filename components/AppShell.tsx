@@ -9,6 +9,7 @@ import {
   BrainCircuit,
   FileSearch,
   Languages,
+  ClipboardCheck,
 } from "lucide-react";
 import { GlossText } from "@/components/GlossText";
 
@@ -18,6 +19,7 @@ const NAV = [
   { href: "/reader", label: "Reader", icon: BookOpenText },
   { href: "/quiz", label: "AI Quiz", icon: BrainCircuit },
   { href: "/vocabulary", label: "Vocabulary", icon: Languages },
+  { href: "/reviews", label: "Reviews", icon: ClipboardCheck },
   { href: "/ingest", label: "PDF Ingest", icon: FileSearch },
 ];
 

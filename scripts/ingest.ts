@@ -12,7 +12,7 @@ async function main() {
   const result = await ingestFolder();
   const ensured = await ensureProgressForAll();
   console.log(
-    `Scanned ${result.scanned.length} PDF(s) — inserted ${result.inserted} word(s).`
+    `Scanned ${result.scanned.length} PDF(s) — inserted ${result.inserted} word(s), queued ${result.reviewed} fuzzy match review(s).`
   );
   if (result.failed.length) {
     console.log(`Failed files: ${result.failed.join(", ")}`);

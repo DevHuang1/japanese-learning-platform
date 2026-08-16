@@ -11,6 +11,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev --name init",
     "db:seed": "tsx scripts/seed.ts",
+    "db:backfill-vocabulary-keys": "tsx scripts/backfill-vocabulary-keys.ts",
     "ingest": "tsx scripts/ingest.ts"
   },
   "dependencies": {

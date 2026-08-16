@@ -23,6 +23,7 @@ export async function POST() {
       ok: true,
       scanned: result.scanned,
       inserted: result.inserted,
+      reviewed: result.reviewed,
       progressEnsured: ensured,
       failed: result.failed,
     });

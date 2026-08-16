@@ -6,6 +6,7 @@ import { FileText, FolderOpen, Loader2, Play, CheckCircle2, AlertTriangle } from
 interface IngestResult {
   scanned: string[];
   inserted: number;
+  reviewed: number;
   progressEnsured: number;
   failed: string[];
 }
@@ -98,6 +99,7 @@ export function IngestPanel({
               <ul className="space-y-1 text-emerald-700">
                 <li>Scanned {result.scanned.length} PDF file(s)</li>
                 <li>Inserted {result.inserted} new word(s)</li>
+                <li>Queued {result.reviewed} fuzzy match review(s)</li>
                 <li>Progress records ensured for {result.progressEnsured} word(s)</li>
                 {result.failed.length > 0 && (
                   <li className="text-crimson">

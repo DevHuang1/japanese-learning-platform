@@ -36,8 +36,10 @@ PDFs are extracted page by page with `pdf-parse`, cleaned for common line-break 
 invisible-character artifacts, and split at line/sentence boundaries while retaining
 page and lesson context. The AI returns structured JSON (kanji / kana / romaji /
 Unicode Burmese meaning / JLPT level / example sentences), which is runtime-validated,
-normalized to hiragana, deduplicated, and stored in SQLite. Image-only PDFs are
-reported as non-extractable and require OCR before ingestion.
+normalized to hiragana, deduplicated with a database-enforced canonical identity, and
+stored in SQLite. Likely OCR duplicates are not merged automatically; they are queued
+for review at **`/reviews`**. Image-only PDFs are reported as non-extractable and
+require OCR before ingestion.
 
 Optional ingestion limits can be tuned in `.env`:
 ```env
@@ -58,6 +60,7 @@ PDF_CHUNK_CHARS=4200
 | Reader      | kuromoji tokenizer + hover/tap Burmese glosses, add-to-deck          |
 | AI Quiz     | Procedural questions with instant Burmese explanations               |
 | Vocabulary  | Searchable library with learning status per word                     |
+| Reviews     | Accept or reject conservative fuzzy-match candidates                 |
 | PDF Ingest  | Scan `~/Desktop/JLPT-PDFs`, structure and insert new words           |
 
 ## Scripts
@@ -65,9 +68,19 @@ PDF_CHUNK_CHARS=4200
 - `npm run db:generate` — regenerate Prisma client
 - `npm run db:migrate` — apply schema migrations
 - `npm run db:seed` — reset + seed 20 demo words
+- `npm run db:backfill-vocabulary-keys` — detect collisions and populate canonical identities for legacy rows
 - `npm run ingest` — scan PDF folder and insert AI-parsed vocabulary
-- `npm test` — run ingestion normalization and chunking regression tests
+- `npm test` — run ingestion and vocabulary-matching regression tests
 - `npm run lint` / `npm run build` — checks and production build
+
+After upgrading an existing database, apply migrations and backfill identities before
+running a real import:
+```bash
+npm run db:migrate
+npm run db:backfill-vocabulary-keys
+```
+The backfill command stops without changing rows if it finds canonical-key collisions;
+resolve those rows manually before retrying.
 
 ## Stack
 
