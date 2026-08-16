@@ -75,7 +75,30 @@ PDF_CHUNK_CHARS=4200
 - `npm run ingest` — scan PDF folder and insert AI-parsed vocabulary
 - `npm test` — run ingestion and vocabulary-matching regression tests
 - `npm run test:e2e` — run Playwright review-page, accessibility, performance, and collision-flow tests
+- `npm run test:reviews:perf` — run the focused `/reviews` performance regression check
+- `npm run test:ingestion:accuracy` — run the JLPT extraction and fuzzy-match accuracy harness
 - `npm run lint` / `npm run build` — checks and production build
+
+## Continuous quality monitoring
+
+The GitHub Actions workflow at `.github/workflows/quality.yml` runs unit tests, lint,
+builds, the full `/reviews` Playwright suite, and a focused performance gate on pushes
+and pull requests. The performance test records DOM-content-loaded and total page
+load timings as an artifact and fails when they exceed the configured budgets.
+
+The same workflow runs the ingestion-accuracy harness daily at 02:17 UTC and can be
+started manually from GitHub Actions. Add new labeled cases to
+`tests/fixtures/jlpt/manifest.json`. For a real selectable-text PDF, add a `pdfSamples`
+entry with its repository-relative path, required text, expected JLPT level, and
+expected lesson. The harness writes `artifacts/ingestion-accuracy.json` with pass/fail
+counts, extracted page/chunk metrics, and fuzzy-match scores. The checked-in baseline
+includes deterministic cases for OCR reading variation, exact kana normalization, and
+homograph protection; it does not call a paid AI provider during CI.
+
+The `/reviews` page supports both single collision resolution and atomic batch
+resolution. Select one radio target per collision group, then choose **Resolve selected**.
+The batch endpoint validates all groups and rolls back the entire request if any row is
+stale or unsafe to merge.
 
 After upgrading an existing database, apply migrations and backfill identities before
 running a real import:

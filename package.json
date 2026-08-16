@@ -9,6 +9,8 @@
     "lint": "eslint",
     "test": "node --import tsx --test tests/**/*.test.ts",
     "test:e2e": "playwright test",
+    "test:reviews:perf": "playwright test tests/e2e/reviews.spec.ts -g \"performance budget\"",
+    "test:ingestion:accuracy": "tsx scripts/test-ingestion-accuracy.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev --name init",
     "db:seed": "tsx scripts/seed.ts",

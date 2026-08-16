@@ -104,6 +104,52 @@ async function main() {
     },
   });
 
+  for (const collision of [
+    {
+      key: "surface:別重複\u0000reading:べつちょうふく",
+      kanji: "別重複",
+      kana: "べつちょうふく",
+      romaji: "betsuchoufuku",
+      meaning: "ထပ်နေသောအခြားအရာ",
+      source: "playwright-collision-two.pdf",
+    },
+    {
+      key: "surface:三重複\u0000reading:さんちょうふく",
+      kanji: "三重複",
+      kana: "さんちょうふく",
+      romaji: "sanchoufuku",
+      meaning: "သုံးကြိမ်ထပ်နေခြင်း",
+      source: "playwright-collision-three.pdf",
+    },
+  ]) {
+    await db.vocabulary.upsert({
+      where: { canonicalKey: collision.key },
+      update: {},
+      create: {
+        canonicalKey: collision.key,
+        kanji: collision.kanji,
+        kana: collision.kana,
+        romaji: collision.romaji,
+        burmeseMeaning: collision.meaning,
+        jlptLevel: "N3",
+        partOfSpeech: "noun",
+        pdfSource: `${collision.source}-kept`,
+      },
+    });
+    await db.vocabulary.create({
+      data: {
+        canonicalKey: null,
+        kanji: collision.kanji,
+        kana: collision.kana,
+        romaji: collision.romaji,
+        burmeseMeaning: collision.meaning,
+        jlptLevel: "N3",
+        partOfSpeech: "noun",
+        pdfSource: collision.source,
+      },
+    });
+  }
+
   for (const fixture of fixtures) {
     await db.vocabularyMatchReview.create({
       data: {

@@ -1,0 +1,82 @@
+{
+  "pdfSamples": [
+    {
+      "id": "smoke-n4-selectable-text",
+      "path": "tests/fixtures/jlpt/smoke-n4.pdf",
+      "minimumPages": 1,
+      "requiredText": ["N4 Lesson 2", "学校", "食べる"],
+      "expectedJlpt": "N4",
+      "expectedLesson": 2
+    }
+  ],
+  "matchCases": [
+    {
+      "id": "ocr-reading-variation",
+      "incoming": {
+        "kanji": "食べる",
+        "kana": "たべゐる",
+        "burmese_meaning": "စားသည်",
+        "jlpt_level": "N5"
+      },
+      "existing": [
+        {
+          "id": "fixture-tab eru",
+          "canonicalKey": "surface:食べる\u0000reading:たべる",
+          "kanji": "食べる",
+          "kana": "たべる",
+          "burmeseMeaning": "စားသည်",
+          "partOfSpeech": "verb"
+        }
+      ],
+      "expectedKind": "review",
+      "minimumScore": 0.7
+    },
+    {
+      "id": "exact-normalized-kana",
+      "incoming": {
+        "kanji": "学校",
+        "kana": "ガッコウ",
+        "burmese_meaning": "ကျောင်း",
+        "jlpt_level": "N5"
+      },
+      "existing": [
+        {
+          "id": "fixture-school",
+          "canonicalKey": "surface:学校\u0000reading:がっこう",
+          "kanji": "学校",
+          "kana": "がっこう",
+          "burmeseMeaning": "ကျောင်း",
+          "partOfSpeech": "noun"
+        }
+      ],
+      "expectedKind": "exact"
+    },
+    {
+      "id": "homograph-protection",
+      "incoming": {
+        "kana": "はし",
+        "burmese_meaning": "တံတား",
+        "jlpt_level": "N4"
+      },
+      "existing": [
+        {
+          "id": "fixture-chopsticks",
+          "canonicalKey": "surface:箸\u0000reading:はし",
+          "kanji": "箸",
+          "kana": "はし",
+          "burmeseMeaning": "တူ",
+          "partOfSpeech": "noun"
+        },
+        {
+          "id": "fixture-bridge",
+          "canonicalKey": "surface:橋\u0000reading:はし",
+          "kanji": "橋",
+          "kana": "はし",
+          "burmeseMeaning": "တံတား",
+          "partOfSpeech": "noun"
+        }
+      ],
+      "expectedKind": "new"
+    }
+  ]
+}

@@ -17,8 +17,15 @@ test.describe("vocabulary review queue", () => {
         loadEvent: entry.loadEventEnd - entry.startTime,
       } : null;
     });
-    expect(Date.now() - startedAt).toBeLessThan(10_000);
-    expect(navigation?.domContentLoaded ?? 0).toBeLessThan(5_000);
+    const totalMs = Date.now() - startedAt;
+    const maxTotalMs = Number(process.env.REVIEWS_PERF_MAX_TOTAL_MS ?? 10_000);
+    const maxDomContentLoadedMs = Number(process.env.REVIEWS_PERF_MAX_DOM_MS ?? 5_000);
+    expect(totalMs).toBeLessThan(maxTotalMs);
+    expect(navigation?.domContentLoaded ?? 0).toBeLessThan(maxDomContentLoadedMs);
+    await test.info().attach("reviews-performance.json", {
+      body: JSON.stringify({ totalMs, navigation }, null, 2),
+      contentType: "application/json",
+    });
 
     await expect(reviewCards(page)).toHaveCount(2);
     await expect(page.getByText("91% match")).toHaveCount(2);
@@ -72,9 +79,26 @@ test.describe("vocabulary review queue", () => {
 
     const collision = page.locator("article").filter({ hasText: "playwright-collision.pdf" });
     await expect(collision).toHaveCount(1);
-    await expect(page.getByText("Identity collision")).toBeVisible();
+    await expect(collision.getByRole("heading", { name: "Identity collision" })).toBeVisible();
 
     await collision.getByRole("button", { name: /Keep .*remove other duplicates/ }).first().click();
+    await expect(page.locator("article").filter({ hasText: "playwright-collision-two.pdf" })).toHaveCount(1);
+
+    const response = await request.get("/api/vocabulary/collisions");
+    expect(response.ok()).toBeTruthy();
+    expect((await response.json()).collisions).toHaveLength(2);
+  });
+
+  test("resolves multiple collision groups atomically with the batch tool", async ({ page, request }) => {
+    await page.goto("/reviews");
+
+    const first = page.locator("article").filter({ hasText: "playwright-collision-two.pdf" });
+    const second = page.locator("article").filter({ hasText: "playwright-collision-three.pdf" });
+    await first.getByRole("radio", { name: /Keep .*for this collision/ }).first().check();
+    await second.getByRole("radio", { name: /Keep .*for this collision/ }).first().check();
+
+    await page.getByRole("button", { name: "Resolve 2 selected collision groups" }).click();
+    await expect(page.getByRole("status")).toContainText("Resolved 2 duplicate rows across 2 groups.");
     await expect(page.getByText("No duplicate collision groups detected.")).toBeVisible();
 
     const response = await request.get("/api/vocabulary/collisions");
