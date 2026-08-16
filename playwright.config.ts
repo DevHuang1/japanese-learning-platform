@@ -9,7 +9,11 @@ export default defineConfig({
   workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  reporter: "list",
+  reporter: [
+    ["list"],
+    ["html", { outputFolder: "playwright-report", open: "never" }],
+    ["json", { outputFile: "artifacts/playwright-report.json" }],
+  ],
   use: {
     ...devices["Desktop Chrome"],
     baseURL,

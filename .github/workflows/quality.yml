@@ -65,10 +65,11 @@ jobs:
         with:
           name: reviews-performance-${{ github.run_id }}
           path: |
+            artifacts/
             test-results/
             playwright-report/
-          if-no-files-found: ignore
-          retention-days: 14
+          if-no-files-found: error
+          retention-days: 30
 
   reviews-e2e:
     name: Reviews full E2E flow
@@ -96,10 +97,11 @@ jobs:
         with:
           name: reviews-e2e-${{ github.run_id }}
           path: |
+            artifacts/
             test-results/
             playwright-report/
-          if-no-files-found: ignore
-          retention-days: 14
+          if-no-files-found: error
+          retention-days: 30
 
   daily-ingestion-accuracy:
     name: Daily JLPT ingestion accuracy
